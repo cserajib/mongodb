@@ -1,0 +1,243 @@
+Microsoft Windows [Version 6.3.9600]
+(c) 2013 Microsoft Corporation. All rights reserved.
+
+C:\Users\admin.TRNROOM3-09>mongod
+2019-11-18T15:07:49.522+0530 I CONTROL  [main] Automatically disabling TLS 1.0,
+to force-enable TLS 1.0 specify --sslDisabledProtocols 'none'
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] MongoDB starting : pid=3
+488 port=27017 dbpath=C:\data\db\ 64-bit host=TRNROOM3-09
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] targetMinOS: Windows 7/W
+indows Server 2008 R2
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] db version v4.0.9
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] git version: fc525e2d9b0
+e4bceff5c2201457e564362909765
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] allocator: tcmalloc
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] modules: none
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] build environment:
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten]     distmod: 2008plus-ss
+l
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten]     distarch: x86_64
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten]     target_arch: x86_64
+2019-11-18T15:07:49.525+0530 I CONTROL  [initandlisten] options: {}
+2019-11-18T15:07:49.526+0530 I STORAGE  [initandlisten] exception in initAndList
+en: NonExistentPath: Data directory C:\data\db\ not found., terminating
+2019-11-18T15:07:49.526+0530 I NETWORK  [initandlisten] shutdown: going to close
+ listening sockets...
+2019-11-18T15:07:49.526+0530 I CONTROL  [initandlisten] now exiting
+2019-11-18T15:07:49.527+0530 I CONTROL  [initandlisten] shutting down with code:
+100
+
+C:\Users\admin.TRNROOM3-09>mongo
+MongoDB shell version v4.0.9
+connecting to: mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb
+Implicit session: session { "id" : UUID("06b395c1-45f2-4841-b446-2d8f2176822a")
+}
+MongoDB server version: 4.0.9
+Welcome to the MongoDB shell.
+For interactive help, type "help".
+For more comprehensive documentation, see
+        http://docs.mongodb.org/
+Questions? Try the support group
+        http://groups.google.com/group/mongodb-user
+Server has startup warnings:
+2019-11-18T10:40:20.069+0530 I CONTROL  [initandlisten]
+2019-11-18T10:40:20.069+0530 I CONTROL  [initandlisten] ** WARNING: Access contr
+ol is not enabled for the database.
+2019-11-18T10:40:20.069+0530 I CONTROL  [initandlisten] **          Read and wri
+te access to data and configuration is unrestricted.
+2019-11-18T10:40:20.069+0530 I CONTROL  [initandlisten]
+---
+Enable MongoDB's free cloud-based monitoring service, which will then receive an
+d display
+metrics about your deployment (disk utilization, CPU, operation statistics, etc)
+.
+
+The monitoring data will be available on a MongoDB website with a unique URL acc
+essible to you
+and anyone you share the URL with. MongoDB may use this information to make prod
+uct
+improvements and to suggest MongoDB products and deployment options to you.
+
+To enable free monitoring, run the following command: db.enableFreeMonitoring()
+To permanently disable this reminder, run the following command: db.disableFreeM
+onitoring()
+---
+
+> db
+test
+> show dbs
+admin      0.000GB
+config     0.000GB
+demodb     0.000GB
+dempdb     0.000GB
+importdb   0.006GB
+importdb1  0.000GB
+importdb2  0.000GB
+local      0.000GB
+syndb      0.001GB
+test       0.000GB
+> sue synedb
+2019-11-18T15:20:43.201+0530 E QUERY    [js] SyntaxError: missing ; before state
+ment @(shell):1:4
+> use synedb
+switched to db synedb
+> db.users.insertOne({name:"raju", age:"43"})
+{
+        "acknowledged" : true,
+        "insertedId" : ObjectId("5dd26a8609b91b1e68318b74")
+}
+> show collections
+users
+> show dbs
+admin      0.000GB
+config     0.000GB
+demodb     0.000GB
+dempdb     0.000GB
+importdb   0.006GB
+importdb1  0.000GB
+importdb2  0.000GB
+local      0.000GB
+syndb      0.001GB
+synedb     0.000GB
+test       0.000GB
+> db.users.find()
+{ "_id" : ObjectId("5dd26a8609b91b1e68318b74"), "name" : "raju", "age" : "43" }
+> db.users.insertOne({_id: 1, name:"vishal", age:"47"})
+{ "acknowledged" : true, "insertedId" : 1 }
+> db.users.find()
+{ "_id" : ObjectId("5dd26a8609b91b1e68318b74"), "name" : "raju", "age" : "43" }
+{ "_id" : 1, "name" : "vishal", "age" : "47" }
+> db.users.insertOne({_id: 1, name:"vishal", age:"47"})
+2019-11-18T15:32:52.714+0530 E QUERY    [js] WriteError: E11000 duplicate key er
+ror collection: synedb.users index: _id_ dup key: { : 1.0 } :
+WriteError({
+        "index" : 0,
+        "code" : 11000,
+        "errmsg" : "E11000 duplicate key error collection: synedb.users index: _
+id_ dup key: { : 1.0 }",
+        "op" : {
+                "_id" : 1,
+                "name" : "vishal",
+                "age" : "47"
+        }
+})
+WriteError@src/mongo/shell/bulk_api.js:461:48
+Bulk/mergeBatchResults@src/mongo/shell/bulk_api.js:841:49
+Bulk/executeBatch@src/mongo/shell/bulk_api.js:906:13
+Bulk/this.execute@src/mongo/shell/bulk_api.js:1150:21
+DBCollection.prototype.insertOne@src/mongo/shell/crud_api.js:252:9
+@(shell):1:1
+> db.users1.insertOne({name:"rajib", age:"77"})
+{
+        "acknowledged" : true,
+        "insertedId" : ObjectId("5dd26d2109b91b1e68318b75")
+}
+> show collections
+users
+users1
+> db.u
+db.unsetWriteConcern(  db.updateUser(         db.users1
+db.updateRole(         db.users
+> db.users1.drop
+function (options = {}) {
+    const cmdObj = Object.assign({drop: this.getName()}, options);
+    ret = this._db.runCommand(cmdObj);
+    if (!ret.ok) {
+        if (ret.errmsg == "ns not found")
+            return false;
+        throw _getErrorWithCode(ret, "drop failed: " + tojson(ret));
+    }
+    return true;
+}
+> show collections
+users
+users1
+> help
+        db.help()                    help on db methods
+        db.mycoll.help()             help on collection methods
+        sh.help()                    sharding helpers
+        rs.help()                    replica set helpers
+        help admin                   administrative help
+        help connect                 connecting to a db help
+        help keys                    key shortcuts
+        help misc                    misc things to know
+        help mr                      mapreduce
+
+        show dbs                     show database names
+        show collections             show collections in current database
+        show users                   show users in current database
+        show profile                 show most recent system.profile entries wit
+h time >= 1ms
+        show logs                    show the accessible logger names
+        show log [name]              prints out the last segment of log in memor
+y, 'global' is default
+        use <db_name>                set current database
+        db.foo.find()                list objects in collection foo
+        db.foo.find( { a : 1 } )     list objects in foo where a == 1
+        it                           result of the last line evaluated; use to f
+urther iterate
+        DBQuery.shellBatchSize = x   set default number of items to display on s
+hell
+        exit                         quit the mongo shell
+> db.users.insertOne???({name: "Ravi", age: 25 , gender: "male", hobbies: ["ches
+s", "Movies"]}
+... ^C
+
+> db.users.insertOne???({name: "Ravi", age: 25 , gender: "male", hobbies: ["ches
+
+2019-11-18T16:49:39.756+0530 E QUERY    [js] SyntaxError: expected expression, g
+ot '?' @(shell):1:19
+> db.users.insertOne({name: "Ravi", age: 25 , gender: "male", hobbies: ["chess",
+ "movies"]}
+... ^C
+
+> db.users.insertOne({name: "Ravi", age: 25 , gender: "male", hobbies: ["chess",
+ "movies"]})
+{
+        "acknowledged" : true,
+        "insertedId" : ObjectId("5dd27ed409b91b1e68318b76")
+}
+> findOne({name: "Ravi"})
+2019-11-18T16:57:48.039+0530 E QUERY    [js] ReferenceError: findOne is not defi
+ned :
+@(shell):1:1
+> db.users.findOne({name: "Ravi"})
+{
+        "_id" : ObjectId("5dd27ed409b91b1e68318b76"),
+        "name" : "Ravi",
+        "age" : 25,
+        "gender" : "male",
+        "hobbies" : [
+                "chess",
+                "movies"
+        ]
+}
+> db.users.find({name: "Ravi"})
+{ "_id" : ObjectId("5dd27ed409b91b1e68318b76"), "name" : "Ravi", "age" : 25, "ge
+nder" : "male", "hobbies" : [ "chess", "movies" ] }
+> db.users.updateOne({name: "Ravi"},{$set: {name: "RaviKishan", deptid: 1001}})
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+> db.users.find({name: "Ravi"})
+> db.users.findOne({name: "Ravi"})
+null
+> db.users.findOne({name: "RaviKishan"})
+{
+        "_id" : ObjectId("5dd27ed409b91b1e68318b76"),
+        "name" : "RaviKishan",
+        "age" : 25,
+        "gender" : "male",
+        "hobbies" : [
+                "chess",
+                "movies"
+        ],
+        "deptid" : 1001
+}
+> db.users.count()
+3
+> db.users.find({name: "RaviKishan"}).count()
+1
+> db.users.deleteMany({age: {$lt:27}})
+{ "acknowledged" : true, "deletedCount" : 1 }
+> db.users.count()
+2
+>
