@@ -1,0 +1,343 @@
+MongoDB Command Reference
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Starting & Stopping MongoDB service on Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On windows, if you installed MongoDB server as a service (which is default option) the service automaically starts on startup. 
+You need to have the MongoDB server running to working with MongoDB
+
+Go to command prompt as administrator. Right-click on cmd icon and select ''Run as Admin" option
+
+Stop the Service:    C:\WINDOWS\system32>net stop MongoDB
+Start the Service:   C:\WINDOWS\system32>net start MongoDB
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ Starting & Stopping MongoDB service on Mac & Linux
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Make sure you added <MongoDB installation directory>/bin to the $PATH.
+You can do this by editing .bash_profile file. (create if non exists)
+
+$ mongod       (this works only if you have data/db at root folder location i.e /data/db or C:\data\db)
+$mongod  --dbpath <path to data/db folder>
+
+Mongodb, by default, runs from port 27017. You can start the MongoDB server to run from a different port if you like.
+
+$sudo mongod --port 27018 
+
+To connect to the mongo shell, when the server is started from adifferent port, you should do the following:
+
+$mongo --port 27018
+
+If you use this way, you need to keep the service running. Just minimize the window and work on a different terminal.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  	Help
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> help       // shows a list of commands
+
+Some common commands to list items:
+
+        > show dbs                     	show database names
+        > show collections             	show collections in current database
+        > show users                   	show users in current database
+        > show profile                	show most recent system.profile entries with time >= 1ms
+        > show logs                    	show the accessible logger names
+        > show log [name]              	prints out the last segment of log in memory, 'global' is default
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  	Working with Databases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Create a database:   		> use mydb;       
+List existing databases:   	> show dbs;
+Drop a database		> db.dropDatabase();
+
+Drop a collection 		> db.myCollection.drop();
+Show Stats		> db.stats()
+
+Your created database (mydb) will be created once you start inserting data.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Working with Collections & Documents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A collection is automatically created when you insert the first document into it.
+
+"db" refers to "current database", and mycolection is the collection in that db.
+
+> db.mycollection.insertOne({"name":"Raju",  "age":40})
+> db.mycollection.insertOne({"name":"Raju",  "dob":new Date("1975-08-31")})
+
+You can omit quotes around the key.
+Every document can have arbitrary number of fields.
+
+> db.mycollection.insertOne({name:"Aditya",  age:14, gender:"Male"})
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Querying the Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+db.inventory.findOne()
+
+db.inventory.find()      		// get all data from the inventory collection
+
+db.inventory.find().pretty()	// json formatted output
+
+db.inventory.find( {status: "D"} )  
+
+db.inventory.find( {status: {$in:[ "A", "D" ]}} )
+
+db.inventory.find( {status: "A", qty: {$lt: 30}} )
+
+db.inventory.find( { $or: [ { status: "A" }, { qty: { $lt: 30 } } ] } )
+
+db.inventory.find( { item: null } )
+db.inventory.find( { item : { $exists: false } } )
+
+db.inventory.find( {} ).limit(3)  
+db.inventory.find( {} ).limit(3) .skip(1)
+
+db.students.find( {} ).sort( {name: 1} );
+db.students.find( {} ).sort( {name: 1, semester: -1} );
+
+db.students.count()
+db.students.find( {semester: 1} ).count()
+
+db.students.distinct("semester")
+
+db.students.find({"name": /.*m.*/})    // similar to sql "like" operator
+db.students.find({"name": /m/})
+
+db.budget.find( { $expr: { $gt: [ "$spent" , "$budget" ] } } )
+
+# Querying Arrays
+db.inventory.find( { tags: ["red", "blank"] } )
+db.inventory.find( { tags:{$all:["red", "blank"]} })
+db.inventory.find( { tags: "red" } )
+db.inventory.find( { dim_cm: { $gt: 25 } } )
+db.inventory.find( { dim_cm: { $gt: 15, $lt: 20 } } )
+db.inventory.find( { dim_cm: { $elemMatch:{ $gt: 22, $lt: 30 } } } )
+db.inventory.find( { "dim_cm.1": { $gt: 25 } } )
+db.inventory.find( { "tags": { $size: 3 } } )
+
+# Querying Embedded Documents
+db.inventory.find( { size: { h: 14, w: 21, uom: "cm" } } )
+db.inventory.find( { "size.h": { $lt: 15 } } )
+db.inventory.find( { "size.h": { $lt: 15 }, "size.uom": "in", status: "D" } )
+
+db.inventory.find(  { "instock": { warehouse: "A", qty: 5 } }  )
+db.inventory.find( { 'instock.qty': { $lte: 20 } } )
+db.inventory.find( { 'instock.qty': { $lte: 20,  $gte: 10 } } )
+db.inventory.find( { "instock": { $elemMatch: { qty: 5, warehouse: "A" } } } )
+db.inventory.find( { "instock": { $elemMatch: { qty: { $gt: 10, $lte: 20 } } } } )
+
+db.inventory.find( {status: "A"}, {item:1, status:1} )
+db.inventory.find({status:"A"},{item:1, status:1, _id:0})
+db.inventory.find({status:"A"}, {status:0, instock:0})
+db.inventory.find( {status: "A”}, {item: 1, status: 1, "size.uom": 1})
+
+db.inventory.find( {status: "A"},{item: 1,status: 1,instock:{$slice: -1}} )
+
+db.schools.find( { zipcode: "63109" }, { students: { $elemMatch: { school: 102 } } } )
+db.schools.find( { zipcode: "63109" }, { students: { $elemMatch:{school: 102, age:{$gt:10} } } } )
+
+db.students.find( { semester: 1, grades: { $gte: 85 } },  { "grades.$": 1 } )
+
+// aggregations
+db.inventory.aggregate([
+  { $match:  { item: {$ne: "", $exists: true} } },
+  { $group: { _id: "$item", total_qty: {$sum:"$qty"}}},
+  { $sort:  { total_qty: -1 } },
+  { $skip: 1}, 
+  { $limit:  5}
+])
+
+db.inventory.aggregate([
+  { $project: {item: 1, qty: 1}},
+  { $match:  { item: {$ne: "", $exists: true} } },
+  { $group: { _id: "$item", total_qty: {$sum:"$qty"}}},
+  { $sort:  { total_qty: -1 } },
+  { $skip: 1}, 
+  { $limit:  5}
+])
+
+// $lookup - join two collections
+db.emp.aggregate( [ 
+  { $lookup: { from: "dept", 
+	     localField: "deptid", 
+                  foreignField: "_id", 
+                        as: "empDeptData"}
+  }
+]).pretty();
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Cursor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+var myCursor = db.inventory.find( { item: /^p/ } );
+
+myCursor
+
+myCursor.forEach(printjson);
+
+var docArr = myCursor.toArray();
+var myDoc = docArr[3];
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Update
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.inventory.updateOne(
+   {  item: "paper" },
+   {  $set: { "size.uom": "cm", status: "P" },   $currentDate: { lastModified: true }   }
+)
+
+db.inventory.updateMany(
+   { "qty": { $lt: 50 } },
+   {  $set: { "size.uom": "in", status: "P" },   $currentDate: { lastModified: true }  }
+)
+
+db.inventory.replaceOne(
+   { item: "paper" },
+   { item: "paper",  instock: [ { warehouse: "A", qty: 60 }, { warehouse: "B", qty: 40 } ] }
+)
+
+db.inventory.updateOne(
+   { item: "pencil" },
+   {   $set: { "qty": 100,  size: { h: 8.5, w: 11, uom: "in" },  status: "P" },
+       $currentDate: { lastModified: true }
+   },
+   { upsert: true }
+)
+
+db.inventory.updateOne(
+       {  item: "canvas" },
+       { $inc: { "qty" : 3},  $set: { "Status" : "C" } },
+       { w: "majority", wtimeout: 100 }
+);
+
+db.users.update(
+   { _id: 1 },
+   {
+     $currentDate: {
+        lastModified: true,
+        "cancellation.date": { $type: "timestamp" }
+     },
+     $set: {
+        status: "D",
+        "cancellation.reason": "user request"
+     }
+   }
+)
+--------------------------
+  Update Operators
+--------------------------
+db.users.update( { _id : {$gt: 1, $lt: 5} }, { $inc: {age: 2} } )
+db.users.update( { _id : {$gt: 1, $lt: 5} }, { $min: {age :  90} } )
+db.users.update( { _id : {$gt: 1, $lt: 5} }, { $mul: {age: 1.1} } )
+
+db.users.update( { _id : {$gt: 1, $lt: 5} }, { $unset: {age :  ""} } )
+db.users.updateMany( { _id : {$gt: 1, $lt: 5} }, { $unset: {age :  ""} } )
+
+db.users.updateMany( { } }, { $rename: {age :  "newAge"} } )    // "age" field name is changed to "newAge"
+
+db.students.update(  { _id: 1 },  { $push: { grades: 89 } } )
+
+db.students.update( { },  { $pull: { grades: { $in: [90, 100] } } },  { multi: true })
+
+db.students.update( { _id: 1 }, { $addToSet: { grades: [ 89, 90 ] } } )
+db.students.update( { _id: 2 },  { $addToSet: { grades: {$each: [89,90,91]} } })
+
+-- Other Methods
+db.students.findOneAndReplace(
+   { "semester" : 1, "name":"Raju" },
+   { "grades" : [ 90,91,92 ] }
+)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      Indexes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.students.createIndex({name: 1});              // ascending
+db.students.createIndex({name: -1});             // descending
+
+db.inventory.createIndex({item: 1, qty: -1});    // compound index
+
+db.inventory.createIndex( {"size": 1 } )         // multikey index
+
+db.getCollectionNames().forEach(function(collection) {
+   indexes = db[collection].getIndexes();
+   print("Indexes for " + collection + ":");
+   printjson(indexes);
+});
+
+db.contacts.createIndex( {"dob.age": 1} )
+db.contacts.explain().find({"dob.age": {$gt: 60}})
+db.contacts.explain("executionStats").find({"dob.age": {$gt: 60}})
+
+// list indexes
+db.contacts.getIndexes()
+
+// drop index
+db.contacts.dropIndex( {"dob.age": 1} )
+
+// unique indexes
+db.students.createIndex( {email: 1}, {unique: true} )
+
+// partial index
+db.contacts.createIndex( {"dob.age": 1}, {partialFilterExpression: {"dob.age": {$gt: 60} }} )
+
+// unquie index considers non-existing values also as duplicates if more than one doc has nonexisting value.
+// we can overcome this by creating index only on existing values.
+db.users.createIndex( {"email": 1}, {unique: true, partialFilterExpression: {email: {$exists: true} }} )
+
+
+// Text Index
+db.users.createIndex( {description: "text"} )
+
+// Note: To use text index inside query to do text search the syntax is a little different:
+// As we can have ONLY ONE text index per collection, to query on the field on which we created
+// the text index, we don't need to specify the field name. 
+// Use $text: {$search: <search term>} syntax.
+db.users.find($text: {$search: "awesome book"})  // search descriptions that contain either of the words
+db.users.find($text: {$search: "awesome -book"}) // search descriptions that contain 'awesome' but NOT 'book'
+
+// score id useful when you use compound text indexes. You can sort by score. 
+db.users.find($text: {$search: "awesome"}, {$score: {$meta: "textScore"}})
+
+// TTL index. Works only on Date fields
+db.sessions.createIndex( {createdAt: 1}, {expiresAfterSeconds: 10} )
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      JSON Import & Export
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note: Run the below commands from the /bin folder of Mongo installation location.
+
+--import
+mongoimport  --db <database-name> --collection <collection-name>  --file <json-file-name> --jsonArray
+mongoimport  --db <database-name> --collection <collection-name>  --file <json-file-name> --jsonArray --drop
+
+example:
+mongoimport --db mydb --collection tvshows --file "D:\MongoDB\tv-shows.json" --jsonArray
+
+--export
+mongoexport --db <database-name> --collection <collection-name>  --out <json-file-name> 
+
+example:
+mongoexport --db mydb --collection tvshows --out "D:\MongoDB\tvshows-exp-1.json"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      CSV Import & Export
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note: Run the below commands from the /bin folder of Mongo installation location.
+
+To import:  
+-------------
+mongoimport --db <db-name> --collection <collection-name> --type csv --headerline --file <csv-file>
+mongoimport -d <db-name> -c <collection-name> --type csv --headerline --file <csv-file>
+
+To Export:   
+-------------
+mongoexport --db <db-name> --collection <collection-name> --type csv --fields <fileds-list> --out <csv-file>
+mongoexport -d <db-name> -c <collection-name> --type csv --fields <fileds-list> --out <csv-file>
+
+Examples:
+-------------
+C:\Program Files\MongoDB\Server\4.0\bin>mongoimport --db mydb -c addresses --type csv --headerline --file "D:\MongoDB\data\addresses.csv"
+
+C:\Program Files\MongoDB\Server\4.0\bin>mongoexport --db mydb --collection addresses --type csv --fields Name,City,State --out "D:\MongoDB\data\addresses_exp_2.csv"
+
